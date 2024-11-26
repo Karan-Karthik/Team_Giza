@@ -1,0 +1,18 @@
+Project/
+│
+├── data_processing/
+│   ├── data_processing.py       # Data validation and processing logic
+│
+├── database/
+│   ├── __init__.py              # Marks the folder as a Python package
+│   ├── connect.py               # Database connection logic
+│   ├── queries.py               # SQL queries and database-related functions
+│
+├── utils/
+│   ├── utils.py                 # Helper utility functions
+│
+├── visuals/
+│   ├── __init__.py              # Marks the folder as a Python package
+│   ├── visualizations.py        # Visualization/plotting functions
+│
+├── app.py                       # Main Streamlit application entry point
