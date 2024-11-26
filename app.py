@@ -1,4 +1,31 @@
-# app.py
+"""
+Hospital COVID-19 Dashboard Application
+
+This module implements a Streamlit-based dashboard for
+visualizing and analyzing hospital COVID-19 data across
+different states and regions. It provides various
+visualizations and metrics including bed occupancy,
+COVID cases, quality ratings, and temporal trends.
+
+The dashboard features:
+- Date-based filtering
+- State/region selection
+- Current week summary statistics
+- Geographic comparisons
+- State-level analysis
+- Weekly reporting trends
+- Bed availability analysis
+- Hospital quality analysis
+- COVID case mapping
+
+Dependencies:
+    - streamlit
+    - plotly.express
+    - pandas
+    - numpy
+    - custom database connection and query modules
+"""
+
 import streamlit as st
 import plotly.express as px
 import pandas as pd
@@ -19,12 +46,31 @@ from visuals.visualizations import (
 )
 
 
-
-
 def main():
+    """
+    Main application function that sets up and runs the Streamlit dashboard.
+
+    The function performs the following operations:
+    1. Sets up the page configuration and title
+    2. Retrieves and validates available dates
+    3. Creates filters for date and state/region selection
+    4. Generates various sections of the dashboard:
+        - Current week summary
+        - Geographic comparison
+        - State-level analysis
+        - Weekly reporting summary
+        - Bed availability trends
+        - Hospital quality analysis
+        - Trend analysis
+        - Additional insights
+
+    Returns:
+        None
+    """
     try:
         # Page setup
-        st.set_page_config(page_title="Hospital COVID-19 Dashboard", layout="wide")
+        st.set_page_config(
+            page_title="Hospital COVID-19 Dashboard", layout="wide")
         st.title("Hospital COVID-19 Analysis Dashboard")
 
         # Get available dates from database
@@ -48,13 +94,15 @@ def main():
             # Allow selecting multiple states/regions
             selected_areas = st.sidebar.multiselect(
                 'Select States and/or Regions',
-                options=['Northeast', 'Midwest', 'South', 'West'] + available_selections['States'],
+                options=['Northeast', 'Midwest', 'South', 'West'] +
+                available_selections['States'],
                 default=['Northeast'],
                 help="You can select multiple states and/or regions"
             )
 
             if not selected_areas:
-                st.warning("Please select at least one state or region to view data.")
+                st.warning(
+                    "Please select at least one state or region to view data.")
                 return
 
         # Current Week Summary
@@ -77,23 +125,25 @@ def main():
 
             total_metrics['occupancy_rate'] = np.where(
                 total_metrics['total_beds'] > 0,
-                np.minimum(total_metrics['occupied_beds'] / total_metrics['total_beds'] * 100, 100),
+                np.minimum(total_metrics['occupied_beds'] /
+                           total_metrics['total_beds'] * 100, 100),
                 0
             )
 
             total_metrics['covid_percentage'] = np.where(
                 total_metrics['occupied_beds'] > 0,
-                np.minimum(total_metrics['covid_beds'] / total_metrics['occupied_beds'] * 100, 100),
+                np.minimum(total_metrics['covid_beds'] /
+                           total_metrics['occupied_beds'] * 100, 100),
                 0
             )
 
             # Display metrics
             col1, col2, col3 = st.columns(3)
-            col1.metric("Total Reporting Hospitals", 
+            col1.metric("Total Reporting Hospitals",
                         f"{int(total_metrics['reporting_hospitals'].iloc[0]):,}")
-            col2.metric("Overall Bed Occupancy", 
+            col2.metric("Overall Bed Occupancy",
                         f"{total_metrics['occupancy_rate'].iloc[0]:.1f}%")
-            col3.metric("COVID % of Occupied Beds", 
+            col3.metric("COVID % of Occupied Beds",
                         f"{total_metrics['covid_percentage'].iloc[0]:.1f}%")
 
             # Geographic comparison visualization
@@ -112,7 +162,8 @@ def main():
             if not state_metrics.empty:
                 plot_state_maps(state_metrics, selected_date)
             else:
-                st.warning("No state-level data available for the selected date.")
+                st.warning(
+                    "No state-level data available for the selected date.")
 
         # Week-over-week comparison
         st.header("Weekly Reporting Summary")
@@ -125,7 +176,7 @@ def main():
                 percent_change = wow_comparison.iloc[0]['percent_change']
 
                 col1, col2, col3 = st.columns(3)
-                col1.metric("Current Week Reporting Hospitals", 
+                col1.metric("Current Week Reporting Hospitals",
                             f"{int(current_count):,}",
                             f"{percent_change:.1f}%" if not pd.isna(percent_change) else "N/A")
 
@@ -134,7 +185,8 @@ def main():
         # Bed availability comparison
         st.header("Bed Availability Trends")
         with get_connection() as conn:
-            bed_comparison = get_bed_availability_comparison(conn, selected_date)
+            bed_comparison = get_bed_availability_comparison(
+                conn, selected_date)
 
             if not bed_comparison.empty:
                 # Create bed availability table
@@ -142,7 +194,8 @@ def main():
                 formatted_bed_table = bed_comparison.copy()
                 for col in formatted_bed_table.columns:
                     if col != 'week':
-                        formatted_bed_table[col] = formatted_bed_table[col].map('{:,.0f}'.format)
+                        formatted_bed_table[col] = formatted_bed_table[col].map(
+                            '{:,.0f}'.format)
                 st.dataframe(formatted_bed_table)
 
                 plot_bed_trends(bed_comparison)
@@ -158,13 +211,14 @@ def main():
                 # Display quality stats table
                 st.subheader("Detailed Quality Rating Statistics")
                 formatted_quality_table = quality_stats.copy()
-                formatted_quality_table['occupancy_rate'] = formatted_quality_table['occupancy_rate'].map('{:.1f}%'.format)
-                formatted_quality_table = formatted_quality_table.rename(columns={
-                    'overall_quality_rating': 'Quality Rating',
-                    'total_beds': 'Total Beds',
-                    'occupied_beds': 'Occupied Beds',
-                    'occupancy_rate': 'Occupancy Rate'
-                })
+                formatted_quality_table['occupancy_rate'] = formatted_quality_table['occupancy_rate'].map(
+                    '{:.1f}%'.format)
+                formatted_quality_table = formatted_quality_table.rename(
+                    columns={
+                        'overall_quality_rating': 'Quality Rating',
+                        'total_beds': 'Total Beds',
+                        'occupied_beds': 'Occupied Beds',
+                        'occupancy_rate': 'Occupancy Rate'})
                 st.dataframe(formatted_quality_table)
 
         # Trend Analysis
@@ -207,14 +261,19 @@ def main():
         # Hospitals with Significant Changes
         st.subheader("Hospitals with Significant COVID Case Changes")
         with get_connection() as conn:
-            significant_changes = get_hospitals_with_significant_changes(conn, selected_date)
+            significant_changes = get_hospitals_with_significant_changes(
+                conn, selected_date)
 
             if not significant_changes.empty:
                 formatted_changes = significant_changes.copy()
-                formatted_changes['current_cases'] = formatted_changes['current_cases'].map('{:,.0f}'.format)
-                formatted_changes['previous_cases'] = formatted_changes['previous_cases'].map('{:,.0f}'.format)
-                formatted_changes['absolute_change'] = formatted_changes['absolute_change'].map('{:+,.0f}'.format)
-                formatted_changes['percent_change'] = formatted_changes['percent_change'].map(lambda x: f"{x:+.1f}%" if pd.notnull(x) else "N/A")
+                formatted_changes['current_cases'] = formatted_changes['current_cases'].map(
+                    '{:,.0f}'.format)
+                formatted_changes['previous_cases'] = formatted_changes['previous_cases'].map(
+                    '{:,.0f}'.format)
+                formatted_changes['absolute_change'] = formatted_changes['absolute_change'].map(
+                    '{:+,.0f}'.format)
+                formatted_changes['percent_change'] = formatted_changes['percent_change'].map(
+                    lambda x: f"{x:+.1f}%" if pd.notnull(x) else "N/A")
                 st.dataframe(formatted_changes)
 
         # Non-reporting Hospitals
@@ -224,13 +283,14 @@ def main():
 
             if not non_reporting.empty:
                 formatted_non_reporting = non_reporting.copy()
-                formatted_non_reporting['days_since_report'] = formatted_non_reporting['days_since_report'].map(lambda x: f"{x.days} days" if pd.notnull(x) else "Never reported")
+                formatted_non_reporting['days_since_report'] = formatted_non_reporting['days_since_report'].map(
+                    lambda x: f"{x.days} days" if pd.notnull(x) else "Never reported")
                 st.dataframe(formatted_non_reporting)
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         st.error("Please check your database connection and try again.")
 
+
 if __name__ == "__main__":
     main()
-

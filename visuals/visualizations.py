@@ -3,6 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+
 def plot_comparison_chart(data):
     """Plot comparison bar chart for occupancy and COVID percentage."""
     fig = px.bar(data,
@@ -18,6 +19,7 @@ def plot_comparison_chart(data):
                  },
                  barmode='group')
     st.plotly_chart(fig, use_container_width=True)
+
 
 def plot_state_maps(state_metrics, selected_date):
     """Plot state-level maps for COVID cases and bed utilization."""
@@ -58,6 +60,7 @@ def plot_state_maps(state_metrics, selected_date):
     )
     st.plotly_chart(fig_beds, use_container_width=True)
 
+
 def plot_weekly_reporting(wow_comparison):
     """Plot week-over-week reporting hospital counts."""
     fig = go.Figure()
@@ -74,13 +77,15 @@ def plot_weekly_reporting(wow_comparison):
     )
     st.plotly_chart(fig, use_container_width=True)
 
+
 def plot_bed_trends(bed_comparison):
     """Plot bed availability trends over weeks."""
     fig = go.Figure()
     # Total occupied beds trend
     fig.add_trace(go.Scatter(
         x=bed_comparison['week'],
-        y=bed_comparison['occupied_adult_beds'] + bed_comparison['occupied_pediatric_beds'],
+        y=bed_comparison['occupied_adult_beds'] +
+        bed_comparison['occupied_pediatric_beds'],
         name='Total Occupied Beds',
         mode='lines+markers'
     ))
@@ -99,6 +104,7 @@ def plot_bed_trends(bed_comparison):
         hovermode='x unified'
     )
     st.plotly_chart(fig, use_container_width=True)
+
 
 def plot_quality_chart(quality_stats):
     """Plot hospital occupancy rate by quality rating."""

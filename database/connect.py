@@ -12,6 +12,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger()
 
+
 def get_connection():
     """
     Establish a connection to the database with provided credentials.
@@ -23,7 +24,8 @@ def get_connection():
         db_user = "njacimov"
         db_pass = "Vj2A0rxBtk"
 
-        logger.info(f"Attempting to connect to the database at {db_host} with user {db_user}")
+        logger.info(
+            f"Attempting to connect to the database at {db_host} with user {db_user}")
 
         # Connect to the database
         connection = psycopg.connect(
@@ -37,4 +39,3 @@ def get_connection():
     except Exception as e:
         logger.error(f"Database connection failed: {str(e)}")
         raise
-
