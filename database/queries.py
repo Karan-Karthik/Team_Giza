@@ -470,9 +470,10 @@ def get_non_reporting_hospitals(conn, selected_date):
     ORDER BY last_report_date DESC NULLS LAST
     LIMIT 10
     """
-    return pd.read_sql_query(
-        query, conn, params=[
-            selected_date, selected_date])
+    df = pd.read_sql_query(query, conn, params=[selected_date, selected_date])
+    if not df.empty:
+        df.index = range(1, len(df) + 1)
+    return df
 
 
 def get_trend_data(conn, states):

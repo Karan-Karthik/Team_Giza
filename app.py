@@ -284,7 +284,7 @@ def main():
             if not non_reporting.empty:
                 formatted_non_reporting = non_reporting.copy()
                 formatted_non_reporting['days_since_report'] = formatted_non_reporting['days_since_report'].map(
-                    lambda x: f"{x.days} days" if pd.notnull(x) else "Never reported")
+                    lambda x: f"{int(x)} days" if pd.notnull(x) else "Never reported")
                 st.dataframe(formatted_non_reporting)
 
     except Exception as e:
