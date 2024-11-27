@@ -545,7 +545,7 @@ def get_top_states_by_covid(conn, selected_date):
     WITH state_stats AS (
         SELECT
             h.state,
-            SUM(GREATEST(COALESCE(NULLIF(w.inpatient_beds_used_covid_7_day_avg, 0), 0), 0)) as covid_cases
+            SUM(GREATEST(COALESCE(NULLIF(NULLIF(w.inpatient_beds_used_covid_7_day_avg, 'NaN'::numeric), 0), 0), 0)) as covid_cases
         FROM weekly_hospital_stats w
         JOIN hospital h ON w.hospital_pk = h.hospital_pk
         WHERE DATE(w.collection_week) = %s
