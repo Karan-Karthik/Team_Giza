@@ -268,9 +268,10 @@ def get_bed_availability_comparison(conn, selected_date):
         covid_beds
     FROM weekly_beds
     """
-    return pd.read_sql_query(
-        query, conn, params=[
-            selected_date, selected_date])
+    df = pd.read_sql_query(query, conn, params=[selected_date, selected_date])
+    if not df.empty:
+        df.index = range(1, len(df) +1)
+    return df
 
 
 def get_quality_rating_analysis(conn, selected_date):
@@ -292,6 +293,7 @@ def get_quality_rating_analysis(conn, selected_date):
     query = """
     WITH current_stats AS (
         SELECT
+            h.hospital_name,
             hq.overall_quality_rating,
             SUM(GREATEST(COALESCE(NULLIF(w.all_adult_hospital_beds_7_day_avg, 'NaN'::numeric), 0), 0) +
                 GREATEST(COALESCE(NULLIF(w.all_pediatric_inpatient_beds_7_day_avg, 'NaN'::numeric), 0), 0)) as total_beds,
@@ -303,9 +305,10 @@ def get_quality_rating_analysis(conn, selected_date):
         WHERE DATE(w.collection_week) = %s
         AND hq.overall_quality_rating IS NOT NULL
         AND hq.overall_quality_rating != 'Not Available'
-        GROUP BY hq.overall_quality_rating
+        GROUP BY (h.hospital_name, hq.overall_quality_rating)
     )
     SELECT
+        hospital_name,
         overall_quality_rating,
         total_beds,
         LEAST(occupied_beds, total_beds) as occupied_beds,
@@ -319,7 +322,10 @@ def get_quality_rating_analysis(conn, selected_date):
     FROM current_stats
     ORDER BY overall_quality_rating::int
     """
-    return pd.read_sql_query(query, conn, params=[selected_date])
+    df = pd.read_sql_query(query, conn, params=[selected_date])
+    if not df.empty:
+        df.index = range(1, len(df) + 1)
+    return df
 
 
 def get_state_covid_map_data(conn, selected_date):
@@ -387,7 +393,7 @@ def get_hospitals_with_significant_changes(conn, selected_date):
             h.hospital_name,
             h.city,
             h.state,
-            GREATEST(COALESCE(NULLIF(w.inpatient_beds_used_covid_7_day_avg, 0), 0), 0) as covid_cases
+            GREATEST(COALESCE(NULLIF(NULLIF(w.inpatient_beds_used_covid_7_day_avg, 'NaN'::numeric), 0), 0), 0) as covid_cases
         FROM weekly_hospital_stats w
         JOIN hospital h ON w.hospital_pk = h.hospital_pk
         WHERE DATE(w.collection_week) = %s
@@ -395,7 +401,7 @@ def get_hospitals_with_significant_changes(conn, selected_date):
     prev_week AS (
         SELECT
             w.hospital_pk,
-            GREATEST(COALESCE(NULLIF(w.inpatient_beds_used_covid_7_day_avg, 0), 0), 0) as covid_cases
+            GREATEST(COALESCE(NULLIF(NULLIF(w.inpatient_beds_used_covid_7_day_avg, 'NaN'::numeric), 0), 0), 0) as covid_cases
         FROM weekly_hospital_stats w
         WHERE DATE(w.collection_week) = %s - INTERVAL '1 week'
     )
@@ -417,9 +423,10 @@ def get_hospitals_with_significant_changes(conn, selected_date):
     ORDER BY ABS(c.covid_cases - p.covid_cases) DESC
     LIMIT 10
     """
-    return pd.read_sql_query(
-        query, conn, params=[
-            selected_date, selected_date])
+    df = pd.read_sql_query(query, conn, params=[selected_date, selected_date])
+    if not df.empty:
+        df.index = range(1, len(df)+1)
+    return df
 
 
 def get_non_reporting_hospitals(conn, selected_date):
@@ -563,4 +570,5 @@ def get_top_states_by_covid(conn, selected_date):
     df = pd.read_sql_query(query, conn, params=[selected_date])
     if not df.empty:
         df['covid_cases'] = df['covid_cases'].map('{:,.0f}'.format)
+        df.index = range(1, len(df) + 1)
     return df
