@@ -1,5 +1,6 @@
 import psycopg
 import logging
+from database.credentials import DB_USER, DB_PASS
 
 # Set up logging
 logging.basicConfig(
@@ -12,28 +13,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger()
 
-
 def get_connection():
     """
     Establish a connection to the database with provided credentials.
     """
     try:
-        # Static credentials
+        # Database connection details
         db_host = "pinniped.postgres.database.azure.com"
         db_name = "njacimov"
-        db_user = "njacimov"
-        db_pass = "Vj2A0rxBtk"
 
         logger.info(
-            f"Attempting to connect to the database at {db_host} with user {db_user}"
-            )
+            f"Attempting to connect to the database at {db_host} with user {DB_USER}"
+        )
 
-        # Connect to the database
+        # Connect to the database using imported credentials
         connection = psycopg.connect(
             host=db_host,
             dbname=db_name,
-            user=db_user,
-            password=db_pass
+            user=DB_USER,
+            password=DB_PASS
         )
         logger.info("Database connection established successfully.")
         return connection

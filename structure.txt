@@ -5,6 +5,7 @@ Project/
 │
 ├── database/
 │   ├── __init__.py              # Marks the folder as a Python package
+│   ├── credentials.py           # Crendetial to log in
 │   ├── connect.py               # Database connection logic
 │   ├── queries.py               # SQL queries and database-related functions
 │
