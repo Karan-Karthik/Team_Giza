@@ -38,7 +38,7 @@ from database.queries import (
     get_state_covid_map_data, get_hospitals_with_significant_changes,
     get_non_reporting_hospitals, get_trend_data, get_top_states_by_covid
 )
-from data_processing.data_processing import calculate_occupancy_stats
+
 from utils.utils import get_states_for_selection
 from visuals.visualizations import (
     plot_comparison_chart, plot_state_maps, plot_weekly_reporting,
@@ -78,7 +78,9 @@ def main():
             available_dates = get_available_dates(conn)
 
         if not available_dates:
-            st.error("No data available. Please check the database connection.")
+            st.error(
+                "No data available. Please check the database connection."
+                )
             return
 
         # Date selector with only available dates
@@ -117,7 +119,9 @@ def main():
 
             # Calculate totals
             total_metrics = pd.DataFrame([{
-                'reporting_hospitals': current_metrics['reporting_hospitals'].sum(),
+                'reporting_hospitals': current_metrics[
+                    'reporting_hospitals'
+                    ].sum(),
                 'total_beds': current_metrics['total_beds'].sum(),
                 'occupied_beds': current_metrics['occupied_beds'].sum(),
                 'covid_beds': current_metrics['covid_beds'].sum()
@@ -139,8 +143,10 @@ def main():
 
             # Display metrics
             col1, col2, col3 = st.columns(3)
-            col1.metric("Total Reporting Hospitals",
-                        f"{int(total_metrics['reporting_hospitals'].iloc[0]):,}")
+            col1.metric(
+                "Total Reporting Hospitals",
+                f"{int(total_metrics['reporting_hospitals'].iloc[0]):,}"
+                        )
             col2.metric("Overall Bed Occupancy",
                         f"{total_metrics['occupancy_rate'].iloc[0]:.1f}%")
             col3.metric("COVID % of Occupied Beds",
@@ -172,13 +178,14 @@ def main():
 
             if not wow_comparison.empty:
                 current_count = wow_comparison.iloc[0]['hospital_count']
-                prev_count = wow_comparison.iloc[0]['prev_week_count']
                 percent_change = wow_comparison.iloc[0]['percent_change']
 
                 col1, col2, col3 = st.columns(3)
-                col1.metric("Current Week Reporting Hospitals",
-                            f"{int(current_count):,}",
-                            f"{percent_change:.1f}%" if not pd.isna(percent_change) else "N/A")
+                col1.metric(
+                    "Current Week Reporting Hospitals",
+                    f"{int(current_count):,}",
+                    f"{percent_change:.1f}%" if not pd.isna(percent_change) else "N/A"
+                    )
 
                 plot_weekly_reporting(wow_comparison)
 
@@ -276,6 +283,7 @@ def main():
                     lambda x: f"{x:+.1f}%" if pd.notnull(x) else "N/A")
                 st.dataframe(formatted_changes)
 
+
         # Non-reporting Hospitals
         st.subheader("Recently Non-reporting Hospitals")
         with get_connection() as conn:
@@ -284,8 +292,10 @@ def main():
             if not non_reporting.empty:
                 formatted_non_reporting = non_reporting.copy()
                 formatted_non_reporting['days_since_report'] = formatted_non_reporting['days_since_report'].map(
-                    lambda x: f"{x.days} days" if pd.notnull(x) else "Never reported")
+                    lambda x: f"{x} days" if pd.notnull(x) else "Never reported"
+                )
                 st.dataframe(formatted_non_reporting)
+
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")

@@ -1,17 +1,3 @@
-"""
-Data Processing Module for Hospital COVID-19 Dashboard
-
-This module provides functions for processing and validating hospital data,
-including bed occupancy calculations and regional statistics aggregation.
-It ensures data consistency and handles edge cases such as missing values
-and logical constraints (e.g., occupied beds cannot exceed total beds).
-
-Functions:
-    validate_and_clean_bed_data: Validates and cleans hospital bed data
-    calculate_occupancy_stats: Calculates occupancy statistics with validation
-    get_region_stats: Aggregates state-level statistics to regional level
-"""
-
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -30,12 +16,9 @@ def validate_and_clean_bed_data(df):
 
     Returns:
         pandas.DataFrame: Cleaned DataFrame with validated bed data where:
-            - All metrics are non-negative
+            - Rows with negative or invalid values are dropped
             - Occupied beds do not exceed total beds
             - COVID beds do not exceed total occupied beds
-
-    Raises:
-        Warning: If any data inconsistencies are found and adjusted
     """
     df = df.copy()
     bed_columns = [
@@ -43,33 +26,64 @@ def validate_and_clean_bed_data(df):
         'total_pediatric_beds', 'occupied_pediatric_beds',
         'covid_beds'
     ]
+
+    print("Initial DataFrame:")
+    print(df)
+
+    # Ensure all bed-related columns are numeric
     for col in bed_columns:
         if col in df.columns:
-            df[col] = df[col].fillna(0).clip(lower=0)
+            # Convert to numeric, invalid values become NaN
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    print("After converting to numeric:")
+    print(df)
+
+    # Drop rows with NaN values in any bed-related column
+    df = df.dropna(subset=bed_columns)
+    print("After dropping NaN values:")
+    print(df)
+
+    # Drop rows with negative values in any bed-related column
+    for col in bed_columns:
+        df = df[df[col] >= 0]
+
+    print("After dropping negative values:")
+    print(df)
+
     # Ensure occupied adult beds don't exceed total adult beds
     mask = df['occupied_adult_beds'] > df['total_adult_beds']
     if mask.any():
-        st.warning(
-            f"Found {
-                mask.sum()} instances where occupied adult beds exceeded total beds. Adjusting values.")
         df.loc[mask, 'occupied_adult_beds'] = df.loc[mask, 'total_adult_beds']
+
+    print("After adjusting occupied adult beds:")
+    print(df)
+
     # Ensure occupied pediatric beds don't exceed total pediatric beds
     mask = df['occupied_pediatric_beds'] > df['total_pediatric_beds']
     if mask.any():
-        st.warning(
-            f"Found {
-                mask.sum()} instances where occupied pediatric beds exceeded total beds. Adjusting values.")
-        df.loc[mask, 'occupied_pediatric_beds'] = df.loc[mask,
-                                                         'total_pediatric_beds']
+        df.loc[
+            mask, 'occupied_pediatric_beds'
+               ] = df.loc[
+                   mask, 'total_pediatric_beds'
+                   ]
+
+    print("After adjusting occupied pediatric beds:")
+    print(df)
+
     # Ensure COVID beds don't exceed total occupied beds
-    df['total_occupied'] = df['occupied_adult_beds'] + \
-        df['occupied_pediatric_beds']
+    df['total_occupied'] = df[
+        'occupied_adult_beds'
+        ] + df[
+            'occupied_pediatric_beds'
+                                    ]
     mask = df['covid_beds'] > df['total_occupied']
     if mask.any():
-        st.warning(
-            f"Found {
-                mask.sum()} instances where COVID beds exceeded total occupied beds. Adjusting values.")
         df.loc[mask, 'covid_beds'] = df.loc[mask, 'total_occupied']
+
+    print("Final DataFrame:")
+    print(df)
+
     return df
 
 

@@ -25,7 +25,8 @@ def get_connection():
         db_pass = "Vj2A0rxBtk"
 
         logger.info(
-            f"Attempting to connect to the database at {db_host} with user {db_user}")
+            f"Attempting to connect to the database at {db_host} with user {db_user}"
+            )
 
         # Connect to the database
         connection = psycopg.connect(
