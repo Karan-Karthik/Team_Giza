@@ -3,6 +3,9 @@ import psycopg
 import pandas as pd
 import logging
 from datetime import datetime
+from database.credentials import DB_USER, DB_PASS, DB_NAME
+
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -13,8 +16,8 @@ def get_connection():
     Use a separate credentials.py file to import user and password.
     """
     return psycopg.connect(
-        host="pinniped.postgres.database.azure.com", dbname="database",
-        user="yourusername", password="yourpassword"
+        host="pinniped.postgres.database.azure.com", dbname= DB_NAME,
+        user=DB_USER, password= DB_PASS
     )
 
 def transform_hhs_data(df):
