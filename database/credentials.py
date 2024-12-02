@@ -1,3 +1,3 @@
 # Database credentials
-DB_USER = "njacimov"
-DB_PASS = "Vj2A0rxBtk"
+DB_USER = "YOUR_USERNAME"
+DB_PASS = "YOUR_PASSWORD"
