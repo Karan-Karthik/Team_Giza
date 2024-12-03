@@ -8,12 +8,16 @@ from database.credentials import DB_USER, DB_PASS, DB_NAME
 logging.basicConfig(
     level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+BATCH_SIZE = 1000
+
 
 def get_connection():
     """Create a database connection."""
     return psycopg.connect(
-        host="pinniped.postgres.database.azure.com", dbname=DB_NAME,
-        user=DB_USER, password=DB_PASS
+        host="pinniped.postgres.database.azure.com",
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASS
     )
 
 
@@ -41,6 +45,13 @@ def transform_hhs_data(df):
     return df
 
 
+def batch_insert(cursor, query, values, batch_size=BATCH_SIZE, desc=""):
+    """Insert data in batches."""
+    for i in tqdm(range(0, len(values), batch_size), desc=desc):
+        batch = values[i:i + batch_size]
+        cursor.executemany(query, batch)
+
+
 def load_hhs_data(file_path):
     """Load HHS CSV and insert data into tables."""
     df = pd.read_csv(file_path)
@@ -49,7 +60,7 @@ def load_hhs_data(file_path):
     with get_connection() as conn:
         with conn.cursor() as cur:
             with conn.transaction():
-                # Insert into Hospital table with progress tracker
+                # Insert into Hospital table
                 hospital_query = """
                 INSERT INTO Hospital (
                     hospital_pk, hospital_name, address, city, state, 
@@ -66,23 +77,15 @@ def load_hhs_data(file_path):
                 hospital_values = df[['hospital_pk',
                                       'hospital_name',
                                       'address', 'city', 'state', 'zip',
-                                      'fips_code'
-                                      ]].drop_duplicates().values.tolist()
-                
-                for value in tqdm(
-                        hospital_values,
-                        desc="Inserting into Hospital Table",
-                        unit="records"):
-                    try:
-                        cur.executemany(hospital_query, [value])
-                    except Exception as e:
-                        logging.error(f"Error occurred: {value}. Error: {e}")
-                        raise
-                
+                                      'fips_code']].drop_duplicates().values.tolist()
+
+                batch_insert(cur, hospital_query, hospital_values,
+                             desc="Inserting into Hospital Table")
+
                 logging.info(
                     f"Loaded {len(hospital_values)} hospital records.")
-                
-                # Insert into weekly_hospital_stats table with progress tracker
+
+                # Insert into weekly_hospital_stats table
                 stats_query = """
                 INSERT INTO weekly_hospital_stats (
                     hospital_pk, collection_week,
@@ -115,27 +118,25 @@ def load_hhs_data(file_path):
                                    'inpatient_beds_used_covid_7_day_avg',
                                    'staffed_icu_adult_patients_confirmed_covid_7_day_avg']].values.tolist()
 
-                for value in tqdm(stats_values, desc="Inserting into Weekly Hospital Stats", unit="records"):
-                    try:
-                        cur.executemany(stats_query, [value])
-                    except Exception as e:
-                        logging.error(f"Error occurred: {value}. Error: {e}")
-                        raise
+                batch_insert(cur, stats_query, stats_values,
+                             desc="Inserting into Weekly Hospital Stats")
 
                 logging.info(f"Loaded {len(stats_values)} weekly stat records.")
+
 
 def main():
     """Main function to run script."""
     if len(sys.argv) != 2:
         print("Usage: python load-hhs.py <csv_file>")
         sys.exit(1)
-    
+
     file_path = sys.argv[1]
     try:
         load_hhs_data(file_path)
     except Exception as e:
         logging.error(f"Failed to load data: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
