@@ -1,4 +1,3 @@
-# Database credentials
-DB_NAME = "njacimov"
-DB_USER = "njacimov"
-DB_PASS = "Vj2A0rxBtk"
+DB_NAME = "YOUR_DATABASE_NAME"
+DB_USER = "YOUR_USERNAME"
+DB_PASSWORD = "YOUR_PASSWORD"
