@@ -28,7 +28,7 @@ python load-quality.py 2021-07-01 Hospital_General_Information-2021-07.csv
 
 Columns and data types are manipulated for insertion into SQL tables. 
 
-Each python script will insert the data with executemany(), print a summary of how much data has been read from the CSV and loaded into the database, and print an error message for any rows that fail to be inserted. This message identifyies which row failed and gives information about it, then stops the script. If an error occurs, no data is loaded into the database. 
+Each python script will insert the data with executemany(), print a summary of how much data has been read from the CSV and loaded into the database, and print an error message for any rows that fail to be inserted. This message identifies which row failed and gives information about it, then stops the script. If an error occurs, no data is loaded into the database. 
 
 Some data is provided under the Data folder.
 
