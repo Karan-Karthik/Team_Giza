@@ -4,7 +4,7 @@
 Team Giza is meant to maintain a database on hospital quality and information. This repository contains scripts and resources for creating a database pipeline for US Department of Health and Human Services (HHS) and Centers for Medicare and Medicaid Services (CMS) data. This includes SQL schema, data loading scripts, data processing functions, and an automated dashboard script that provides insights into the data. The data is available on HealthData.gov and CMS.gov.
 
 ## Setup
-Pull the repository to your platform of choice, then create a credentials.py file in the repository with the following strucure:
+Pull the repository to your platform of choice, then update the credentials.py file in the repository with the following strucure:
 
 ```
 DB_NAME = "YOUR_DATABASE_NAME"
@@ -20,6 +20,10 @@ There are two python scripts to load datasets from HHS and CMS. Each python scri
 ### Example
 ```
 python load-hhs.py 2022-01-04-hhs-data.csv
+```
+
+```
+python load-quality.py 2021-07-01 Hospital_General_Information-2021-07.csv
 ```
 
 Columns and data types are manipulated for insertion into SQL tables. 
